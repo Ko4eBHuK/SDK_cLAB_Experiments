@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 #include "iwdg.h"
 #include "gpio.h"
 
@@ -49,6 +50,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -88,53 +90,15 @@ int main(void)
   MX_GPIO_Init();
   MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
-
-  /* Do not remove this code below */
-  MX_TRACE_Init();
-  SDK_TRACE_Start();
-  /* Do not remove this code from above */
-
-  SDK_TRACE_Timestamp(PRINT, 1);
-  SDK_TRACE_Print("%s","LEDs Blink test");
-  SDK_TRACE_Timestamp(PRINT, 0);
-  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_15);
-  SDK_TRACE_Timestamp(LED3, HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_15));
-  /* Place your code from here */
-  /* Example of using LED tracing */
-
-  for (int i = 0; i < 10; i++) {
-	  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
-  	  SDK_TRACE_Timestamp(LED1, HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_13));
-  	  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_15);
-  	  SDK_TRACE_Timestamp(LED3, HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_15));
-  	  HAL_Delay(250);
-  }
-
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
-  SDK_TRACE_Timestamp(LED1, HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_13));
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_15, GPIO_PIN_RESET);
-  SDK_TRACE_Timestamp(LED3, HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_15));
-
-  SDK_TRACE_Timestamp(PRINT, 1);
-  SDK_TRACE_Print("%s","Test passed");
-  SDK_TRACE_Timestamp(PRINT, 0);
-
-  /* Example of sending debug messages */
-
-  SDK_TRACE_Print("%s%d%s%X", "Decimal value: ", 255, " Hex value: ", 255);
-
-  /* Example of writing dump */
-
-  uint8_t data[4] = { 0xDE, 0xAD, 0xBE, 0xEF };
-  SDK_TRACE_Dump(&data, 4);
-
-  /* Place your code before here */
-  /* Do not remove this code below */
-  SDK_TRACE_Stop();
-  /* Do not remove this code from above */
-
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();  /* Call init function for freertos objects (in freertos.c) */
+  MX_FREERTOS_Init();
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -193,6 +157,27 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+ /**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM1) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
